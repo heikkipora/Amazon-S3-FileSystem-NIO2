@@ -61,7 +61,10 @@ public class S3Utils {
      * @return S3FileAttributes
      */
     public S3FileAttributes getS3FileAttributes(S3Path s3Path) throws NoSuchFileException {
-        return toS3FileAttributes(getS3ObjectSummary(s3Path));
+        if (!s3Path.hasFileAttributes()) {
+            s3Path.setFileAttributes(toS3FileAttributes(getS3ObjectSummary(s3Path)));
+        }
+        return s3Path.getFileAttributes();
     }
 
     /**
