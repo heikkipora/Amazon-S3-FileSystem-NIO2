@@ -61,9 +61,15 @@ public class S3Utils {
      * @return S3FileAttributes
      */
     public S3FileAttributes getS3FileAttributes(S3Path s3Path) throws NoSuchFileException {
-        String key = s3Path.getKey();
-        S3ObjectSummary objectSummary = getS3ObjectSummary(s3Path);
+        return toS3FileAttributes(getS3ObjectSummary(s3Path));
+    }
 
+    /**
+     * convert S3ObjectSummary tpo S3FileAttributes
+     * @param objectSummary S3ObjectSummary mandatory not null
+     * @return S3FileAttributes
+     */
+    public static S3FileAttributes toS3FileAttributes(S3ObjectSummary objectSummary) {
         // parse the data to BasicFileAttributes.
         FileTime lastModifiedTime = null;
         if (objectSummary.getLastModified() != null){
@@ -74,22 +80,23 @@ public class S3Utils {
         boolean regularFile = false;
         String resolvedKey = objectSummary.getKey();
         // check if is a directory and exists the key of this directory at amazon s3
-        if (key.endsWith("/") && resolvedKey.equals(key) ||
-                resolvedKey.equals(key + "/")) {
+        if (objectSummary.getKey().endsWith("/") && resolvedKey.equals(objectSummary.getKey()) ||
+                resolvedKey.equals(objectSummary.getKey() + "/")) {
             directory = true;
         }
-        else if (key.isEmpty()) { // is a bucket (no key)
+        else if (objectSummary.getKey().isEmpty()) { // is a bucket (no key)
             directory = true;
             resolvedKey = "/";
         }
-        else if (!resolvedKey.equals(key) && resolvedKey.startsWith(key)) { // is a directory but not exists at amazon s3
+        else if (!resolvedKey.equals(objectSummary.getKey()) && resolvedKey.startsWith(objectSummary.getKey())) { // is a directory but not exists at amazon s3
             directory = true;
             // no metadata, we fake one
             size = 0;
             // delete extra part
-            resolvedKey = key + "/";
-        } else
+            resolvedKey = objectSummary.getKey() + "/";
+        } else {
             regularFile = true;
+        }
         return new S3FileAttributes(resolvedKey, lastModifiedTime, size, directory, regularFile);
     }
 }
