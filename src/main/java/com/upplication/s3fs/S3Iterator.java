@@ -139,7 +139,7 @@ public class S3Iterator implements Iterator<Path> {
             String immediateDescendantKey = getImmediateDescendant(key, objectSummaryKey);
             if (immediateDescendantKey != null) {
                 S3Path descendentPart = new S3Path(fileSystem, fileStore, fileSystem.key2Parts(immediateDescendantKey));
-                descendentPart.setFileAttributes(toS3FileAttributes(objectSummary));
+                descendentPart.setFileAttributes(toS3FileAttributes(objectSummary, immediateDescendantKey));
 
                 if (!listPath.contains(descendentPart)) {
                     listPath.add(descendentPart);

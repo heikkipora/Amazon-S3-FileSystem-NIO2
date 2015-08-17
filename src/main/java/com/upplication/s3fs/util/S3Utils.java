@@ -62,7 +62,7 @@ public class S3Utils {
      */
     public S3FileAttributes getS3FileAttributes(S3Path s3Path) throws NoSuchFileException {
         if (!s3Path.hasFileAttributes()) {
-            s3Path.setFileAttributes(toS3FileAttributes(getS3ObjectSummary(s3Path)));
+            s3Path.setFileAttributes(toS3FileAttributes(getS3ObjectSummary(s3Path), s3Path.getKey()));
         }
         return s3Path.getFileAttributes();
     }
@@ -72,7 +72,7 @@ public class S3Utils {
      * @param objectSummary S3ObjectSummary mandatory not null
      * @return S3FileAttributes
      */
-    public static S3FileAttributes toS3FileAttributes(S3ObjectSummary objectSummary) {
+    public static S3FileAttributes toS3FileAttributes(S3ObjectSummary objectSummary, String key) {
         // parse the data to BasicFileAttributes.
         FileTime lastModifiedTime = null;
         if (objectSummary.getLastModified() != null){
@@ -83,20 +83,19 @@ public class S3Utils {
         boolean regularFile = false;
         String resolvedKey = objectSummary.getKey();
         // check if is a directory and exists the key of this directory at amazon s3
-        if (objectSummary.getKey().endsWith("/") && resolvedKey.equals(objectSummary.getKey()) ||
-                resolvedKey.equals(objectSummary.getKey() + "/")) {
+        if (key.endsWith("/") && resolvedKey.equals(key) ||
+                resolvedKey.equals(key + "/")) {
             directory = true;
-        }
-        else if (objectSummary.getKey().isEmpty()) { // is a bucket (no key)
+        } else if (key.isEmpty()) { // is a bucket (no key)
             directory = true;
             resolvedKey = "/";
         }
-        else if (!resolvedKey.equals(objectSummary.getKey()) && resolvedKey.startsWith(objectSummary.getKey())) { // is a directory but not exists at amazon s3
+        else if (!resolvedKey.equals(key) && resolvedKey.startsWith(key)) { // is a directory but not exists at amazon s3
             directory = true;
             // no metadata, we fake one
             size = 0;
             // delete extra part
-            resolvedKey = objectSummary.getKey() + "/";
+            resolvedKey = key + "/";
         } else {
             regularFile = true;
         }
